@@ -21,14 +21,13 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageSwitcher;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ViewSwitcher;
 
 import com.example.android.android_me.R;
+import com.example.android.android_me.ui.tools.view.ViewAnimatorAnimations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,10 +36,13 @@ public class BodyPartFragment extends Fragment {
 
     // TODO (3) Create final Strings to store state information about the list of images and list index
 
+    public static final String ids = "IDS";
+    public static final String index = "INDEX";
+
     // Tag for logging
     private static final String TAG = "BodyPartFragment";
 
-    ImageSwitcher imageView = null;
+    ImageSwitcher imageSwitcher = null;
 
     private List<Integer> mImageIds = new ArrayList<>();
     private int mListIndex;
@@ -56,10 +58,20 @@ public class BodyPartFragment extends Fragment {
      */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            mImageIds = savedInstanceState.getIntegerArrayList(ids);
+            mListIndex = savedInstanceState.getInt(index);
+        }
 
         View rootView = inflater.inflate(R.layout.fragment_body_part, container, false);
-        imageView = (ImageSwitcher) rootView.findViewById(R.id.body_part_image_view);
-        imageView.setFactory(new ViewSwitcher.ViewFactory() {
+        imageSwitcher = (ImageSwitcher) rootView.findViewById(R.id.body_part_image_view);
+        setupImageSwitcher();
+
+        return rootView;
+    }
+
+    private void setupImageSwitcher() {
+        imageSwitcher.setFactory(new ViewSwitcher.ViewFactory() {
             public View makeView() {
                 ImageView imageView = new ImageView(getActivity().getApplicationContext());
                 imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -67,14 +79,9 @@ public class BodyPartFragment extends Fragment {
                 return imageView;
             }
         });
-        Animation in  = AnimationUtils.loadAnimation(getActivity(), R.anim.left_to_right_in);
-        Animation out = AnimationUtils.loadAnimation(getActivity(), R.anim.left_to_right_out);
-        imageView.setInAnimation(in);
-        imageView.setOutAnimation(out);
+        ViewAnimatorAnimations.setupFadeFromLeftToRightAnimation(getActivity(), imageSwitcher);
 
-        showImage();
-
-        imageView.setOnClickListener(new View.OnClickListener() {
+        imageSwitcher.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 increaseImageIndex();
@@ -82,7 +89,7 @@ public class BodyPartFragment extends Fragment {
             }
         });
 
-        return rootView;
+        showImage();
     }
 
     private void increaseImageIndex() {
@@ -94,7 +101,7 @@ public class BodyPartFragment extends Fragment {
 
     private void showImage() {
         if (mListIndex > -1 && mImageIds.size() > mListIndex) {
-            imageView.setImageResource(mImageIds.get(mListIndex));
+            imageSwitcher.setImageResource(mImageIds.get(mListIndex));
         }
     }
 
@@ -105,5 +112,15 @@ public class BodyPartFragment extends Fragment {
 
     public void setListIndex(int index) {
         mListIndex = index;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt(index, mListIndex);
+        outState.putIntegerArrayList(ids, (ArrayList<Integer>) mImageIds);
+
+        super.onSaveInstanceState(outState);
+
+
     }
 }
